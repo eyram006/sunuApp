@@ -82,14 +82,14 @@
         <div class="content-card">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                    <a href="{{ route('gestionnaires.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i>
                         Nouveau Gestionnaire
-                    </button>
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                    </a>
+                    <a href="{{ route('gestionnaires.import.form') }}" class="btn btn-success">
                         <i class="fas fa-upload me-1"></i>
                         Import Excel
-                    </button>
+                    </a>
                     <a href="{{ route('gestionnaires.export') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-download me-1"></i>
                         Exporter
@@ -192,8 +192,17 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ $gestionnaire->statut == 'actif' ? 'success' : ($gestionnaire->statut == 'inactif' ? 'secondary' : ($gestionnaire->statut == 'suspendu' ? 'danger' : 'warning')) }}">
-                                            {{ ucfirst(str_replace('_', ' ', $gestionnaire->statut)) }}
+                                        @php
+                                            $statut = $gestionnaire->statut;
+                                            $badgeClass = match ($statut) {
+                                                'actif' => 'bg-success',                    // vert
+                                                'inactif' => 'bg-warning text-dark',        // orange
+                                                'suspendu' => 'bg-danger',                  // rouge
+                                                default => 'bg-secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }}">
+                                            {{ ucfirst(str_replace('_', ' ', $statut)) }}
                                         </span>
                                     </td>
                                     <td>
@@ -267,171 +276,7 @@
     </div>
 </div>
 
-<!-- Modal Création Gestionnaire -->
-<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createModalLabel">
-                    <i class="fas fa-user-plus me-2"></i>
-                    Créer un Nouveau Gestionnaire
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('gestionnaires.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <!-- Colonne gauche -->
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="prenoms" class="form-label">Prénoms *</label>
-                                <input type="text" class="form-control @error('prenoms') is-invalid @enderror" 
-                                       id="prenoms" name="prenoms" value="{{ old('prenoms') }}" required>
-                                @error('prenoms')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="nom" class="form-label">Nom *</label>
-                                <input type="text" class="form-control @error('nom') is-invalid @enderror" 
-                                       id="nom" name="nom" value="{{ old('nom') }}" required>
-                                @error('nom')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email *</label>
-                                <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                       id="email" name="email" value="{{ old('email') }}" required>
-                                @error('email')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                        
-                        <!-- Colonne droite -->
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="telephone" class="form-label">Téléphone</label>
-                                <input type="tel" class="form-control @error('telephone') is-invalid @enderror" 
-                                       id="telephone" name="telephone" value="{{ old('telephone') }}">
-                                @error('telephone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="statut" class="form-label">Statut *</label>
-                                <select class="form-select @error('statut') is-invalid @enderror" 
-                                        id="statut" name="statut" required>
-                                    <option value="">Sélectionner un statut</option>
-                                    <option value="actif" {{ old('statut') == 'actif' ? 'selected' : '' }}>Actif</option>
-                                    <option value="inactif" {{ old('statut') == 'inactif' ? 'selected' : '' }}>Inactif</option>
-                                    <option value="suspendu" {{ old('statut') == 'suspendu' ? 'selected' : '' }}>Suspendu</option>
-                                    <option value="en_conge" {{ old('statut') == 'en_conge' ? 'selected' : '' }}>En congé</option>
-                                </select>
-                                @error('statut')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="notes" class="form-label">Notes</label>
-                                <textarea class="form-control @error('notes') is-invalid @enderror" 
-                                          id="notes" name="notes" rows="3" 
-                                          placeholder="Informations supplémentaires">{{ old('notes') }}</textarea>
-                                @error('notes')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Informations importantes -->
-                    <div class="alert alert-info mt-3">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-info-circle me-2 mt-1"></i>
-                            <div>
-                                <strong>Information importante :</strong>
-                                <ul class="mb-0 mt-2">
-                                    <li>Un compte utilisateur sera automatiquement créé</li>
-                                    <li>Les identifiants seront envoyés par email</li>
-                                    <li>Le gestionnaire devra changer son mot de passe</li>
-                                    <li>Les entreprises seront assignées après la création</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>
-                        Créer le gestionnaire
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Import Excel -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="importModalLabel">
-                    <i class="fas fa-upload me-2"></i>
-                    Import de Gestionnaires
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('gestionnaires.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="excel_file" class="form-label">Fichier Excel</label>
-                        <input type="file" class="form-control" id="excel_file" name="excel_file" 
-                               accept=".xlsx,.xls" required>
-                        <div class="form-text">
-                            Formats acceptés : .xlsx, .xls (Max: 2MB)
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <h6 class="alert-heading">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Instructions d'import
-                        </h6>
-                        <ul class="mb-0">
-                            <li>Le fichier doit contenir les colonnes : Prénoms, Nom, Email, Téléphone, Statut</li>
-                            <li>Les statuts valides sont : actif, inactif, suspendu, en_conge</li>
-                            <li>Un compte utilisateur sera créé pour chaque gestionnaire</li>
-                            <li>Les identifiants seront envoyés par email</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <a href="{{ route('gestionnaires.template') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-download me-1"></i>
-                            Télécharger le modèle
-                        </a>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary" id="importBtn">
-                        <i class="fas fa-upload me-1"></i>
-                        Importer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Les formulaires de création et d'import sont désormais sur des pages dédiées -->
 @endsection
 
 @push('styles')
@@ -478,251 +323,60 @@
 
 @push('scripts')
 <script>
-function updateStatut(gestionnaireId, statut) {
-    if (!confirm('Êtes-vous sûr de vouloir modifier le statut de ce gestionnaire ?')) {
-        return;
-    }
-    
-    fetch(`/gestionnaires/${gestionnaireId}/statut`, {
-        method: 'PATCH',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-        body: JSON.stringify({ statut: statut })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Erreur lors de la modification du statut');
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de la modification du statut');
-    });
-}
-
-// Gestion des modals - Solution Radicale
+// Gestion des modals - Utilisation des modals personnalisés
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initialisation des modals...');
+    console.log('🚀 Page gestionnaires chargée, modals personnalisés prêts !');
     
-    // Initialiser Bootstrap si disponible
-    if (typeof bootstrap !== 'undefined') {
-        console.log('✅ Bootstrap est chargé, version:', bootstrap.Modal.VERSION);
-    } else {
-        console.error('❌ Bootstrap n\'est pas chargé!');
-        // Fallback: créer nos propres modals
-        initCustomModals();
-        return;
-    }
-    
-    // Initialiser les modals Bootstrap
-    initBootstrapModals();
+    // Les modals sont maintenant gérés automatiquement par custom-modals.js
+    // Plus besoin de code complexe ici !
 });
 
-function initBootstrapModals() {
-    console.log('🔧 Initialisation des modals Bootstrap...');
-    
-    const createModal = document.getElementById('createModal');
-    const importModal = document.getElementById('importModal');
-    
-    if (createModal) {
-        console.log('📝 Modal de création trouvé');
-        const bsModal = new bootstrap.Modal(createModal, {
-            backdrop: 'static',
-            keyboard: true,
-            focus: true
-        });
-        
-        // Gérer l'ouverture
-        document.querySelector('[data-bs-target="#createModal"]').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('🔓 Ouverture du modal de création');
-            bsModal.show();
-        });
-        
-        // Gérer la fermeture
-        createModal.addEventListener('hidden.bs.modal', function() {
-            console.log('🔒 Modal de création fermé');
-            const form = createModal.querySelector('form');
-            if (form) {
-                form.reset();
-                // Supprimer les messages d'erreur
-                const invalidFeedbacks = createModal.querySelectorAll('.is-invalid');
-                invalidFeedbacks.forEach(el => el.classList.remove('is-invalid'));
+// Fonction pour mettre à jour le statut
+function updateStatut(gestionnaireId, newStatut) {
+    if (confirm('Êtes-vous sûr de vouloir modifier le statut de ce gestionnaire ?')) {
+        fetch(`/gestionnaires/${gestionnaireId}/update-statut`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ statut: newStatut })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mettre à jour l'affichage
+                const statutCell = document.querySelector(`#statut-${gestionnaireId}`);
+                if (statutCell) {
+                    statutCell.textContent = newStatut;
+                    statutCell.className = `badge bg-${getStatutColor(newStatut)}`;
+                }
+                
+                // Afficher un message de succès
+                alert('Statut mis à jour avec succès !');
+                
+                // Recharger la page pour mettre à jour les statistiques
+                location.reload();
+            } else {
+                alert('Erreur lors de la mise à jour du statut');
             }
-        });
-        
-        // Focus sur le premier champ
-        createModal.addEventListener('shown.bs.modal', function() {
-            console.log('👁️ Modal de création affiché');
-            const firstInput = createModal.querySelector('input, select, textarea');
-            if (firstInput) {
-                firstInput.focus();
-            }
-        });
-    }
-    
-    if (importModal) {
-        console.log('📤 Modal d\'import trouvé');
-        const bsModal = new bootstrap.Modal(importModal, {
-            backdrop: 'static',
-            keyboard: true,
-            focus: true
-        });
-        
-        // Gérer l'ouverture
-        document.querySelector('[data-bs-target="#importModal"]').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('🔓 Ouverture du modal d\'import');
-            bsModal.show();
-        });
-        
-        // Gérer la fermeture
-        importModal.addEventListener('hidden.bs.modal', function() {
-            console.log('🔒 Modal d\'import fermé');
-            const form = document.getElementById('importForm');
-            if (form) {
-                form.reset();
-            }
-        });
-    }
-    
-    // Gestion de l'import
-    const importForm = document.getElementById('importForm');
-    if (importForm) {
-        importForm.addEventListener('submit', function(e) {
-            console.log('📤 Soumission du formulaire d\'import');
-            const fileInput = document.getElementById('excel_file');
-            const importBtn = document.getElementById('importBtn');
-            
-            if (fileInput.files.length === 0) {
-                e.preventDefault();
-                alert('Veuillez sélectionner un fichier');
-                return;
-            }
-            
-            // Désactiver le bouton pendant l'import
-            importBtn.disabled = true;
-            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Import en cours...';
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la mise à jour du statut');
         });
     }
 }
 
-function initCustomModals() {
-    console.log('🔧 Initialisation des modals personnalisés...');
-    
-    // Créer des modals fonctionnels sans Bootstrap
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        const modalId = modal.id;
-        const trigger = document.querySelector(`[data-bs-target="#${modalId}"]`);
-        
-        if (trigger) {
-            trigger.addEventListener('click', function(e) {
-                e.preventDefault();
-                showCustomModal(modalId);
-            });
-        }
-        
-        // Bouton de fermeture
-        const closeBtn = modal.querySelector('.btn-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                hideCustomModal(modalId);
-            });
-        }
-        
-        // Fermer en cliquant sur le backdrop
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                hideCustomModal(modalId);
-            }
-        });
-    });
-}
-
-function showCustomModal(modalId) {
-    console.log('🔓 Ouverture du modal personnalisé:', modalId);
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'block';
-        modal.classList.add('show');
-        
-        // Créer le backdrop
-        const backdrop = document.createElement('div');
-        backdrop.className = 'modal-backdrop show';
-        backdrop.id = 'custom-backdrop';
-        document.body.appendChild(backdrop);
-        
-        // Focus sur le premier champ
-        const firstInput = modal.querySelector('input, select, textarea');
-        if (firstInput) {
-            firstInput.focus();
-        }
+// Fonction pour obtenir la couleur du badge selon le statut
+function getStatutColor(statut) {
+    switch(statut) {
+        case 'actif': return 'success';
+        case 'inactif': return 'secondary';
+        case 'suspendu': return 'warning';
+        case 'en_conge': return 'info';
+        default: return 'secondary';
     }
 }
-
-function hideCustomModal(modalId) {
-    console.log('🔒 Fermeture du modal personnalisé:', modalId);
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        
-        // Supprimer le backdrop
-        const backdrop = document.getElementById('custom-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
-        
-        // Réinitialiser le formulaire
-        const form = modal.querySelector('form');
-        if (form) {
-            form.reset();
-        }
-    }
-}
-
-// Fonction pour forcer la fermeture des modals
-function forceCloseModals() {
-    console.log('🔄 Fermeture forcée de tous les modals');
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (typeof bootstrap !== 'undefined') {
-            const modalInstance = bootstrap.Modal.getInstance(modal);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        } else {
-            hideCustomModal(modal.id);
-        }
-    });
-}
-
-// Fermer les modals avec Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        forceCloseModals();
-    }
-});
-
-// Debug: Afficher l'état des modals
-window.debugModals = function() {
-    console.log('🔍 Debug des modals:');
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        console.log(`- ${modal.id}:`, {
-            display: modal.style.display,
-            classes: modal.className,
-            visible: modal.classList.contains('show'),
-            bootstrap: typeof bootstrap !== 'undefined'
-        });
-    });
-};
 </script>
 @endpush

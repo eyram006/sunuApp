@@ -31,6 +31,10 @@
                                     <td>{{ $client->nom_entreprise }}</td>
                                 </tr>
                                 <tr>
+                                    <td><strong>Raison sociale :</strong></td>
+                                    <td>{{ $client->raison_sociale ?? '—' }}</td>
+                                </tr>
+                                <tr>
                                     <td><strong>Adresse :</strong></td>
                                     <td>{{ $client->adresse }}</td>
                                 </tr>

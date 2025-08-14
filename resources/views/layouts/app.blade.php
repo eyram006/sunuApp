@@ -18,12 +18,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
+    
     <link href="{{ asset('css/sunu-sante.css') }}" rel="stylesheet">
     <link href="{{ asset('css/dashboard.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/modal-fix.css') }}" rel="stylesheet">
     
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    
     
     @stack('styles')
 </head>
@@ -113,14 +115,14 @@
                         </a>
                         
                         <a href="{{ route('gestionnaires.index') }}" class="menu-item {{ request()->routeIs('gestionnaires.*') ? 'active' : '' }}">
-                            <i class="fas fa-users-cog"></i>
+                            <i class="fas fa-user-tie"></i>
                             <span>Gestionnaires</span>
                         </a>
                     @endif
                     
-                    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('gestionnaire'))
+                    @if(auth()->user()->hasRole(['admin', 'gestionnaire']))
                         <a href="{{ route('assures.index') }}" class="menu-item {{ request()->routeIs('assures.*') ? 'active' : '' }}">
-                            <i class="fas fa-user-friends"></i>
+                            <i class="fas fa-users"></i>
                             <span>Assurés</span>
                         </a>
                         
@@ -131,13 +133,31 @@
                     @endif
                 </div>
 
-                <div class="menu-section">Administration</div>
+                <!-- Menu Administration -->
                 @if(auth()->user()->hasRole('admin'))
-                <a href="#" class="menu-item" data-permission="manage_settings">
-                    <i class="fas fa-cog"></i>
-                    <span>Paramètres</span>
-                </a>
+                    <div class="menu-section">
+                        <div class="menu-section-title">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Administration</span>
+                        </div>
+                        
+                        <a href="#" class="menu-item" onclick="showSettings()">
+                            <i class="fas fa-cog"></i>
+                            <span>Paramètres</span>
+                        </a>
+                    </div>
                 @endif
+            </div>
+
+            <!-- User Label -->
+            <div class="user-label">
+                <div class="user-avatar-small">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                </div>
+                <div class="user-info">
+                    <div class="user-name">{{ auth()->user()->name }}</div>
+                    <div class="user-role">{{ auth()->user()->roles->first()->name ?? 'Utilisateur' }}</div>
+                </div>
             </div>
         </nav>
 
@@ -146,100 +166,84 @@
 
         <!-- Main Content -->
         <main class="main-content" id="mainContent">
-            <div id="content-area">
-                @yield('content')
-            </div>
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @yield('content')
         </main>
     </div>
-    
+
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Custom JS -->
+    <!-- Custom JavaScript -->
     <script>
-        // Configuration des rôles et permissions
-        const roles = {
-            'admin': {
-                name: 'Administrateur',
-                permissions: ['manage_clients', 'manage_assures', 'manage_claims', 'manage_import', 'manage_settings']
-            },
-            'gestionnaire': {
-                name: 'Gestionnaire',
-                permissions: ['manage_clients', 'manage_assures', 'manage_claims', 'manage_import']
-            },
-            'assure': {
-                name: 'Assuré',
-                permissions: ['view_claims']
-            }
-        };
-
-        // Rôle actuel
-        let currentUserRole = '{{ auth()->user()->roles->first()->name ?? "assure" }}';
-
-        // Initialisation
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            loadTheme();
-        });
-
-        function initializeApp() {
-            updateRoleDisplay();
-            updateMenuPermissions();
-        }
-
-        function updateRoleDisplay() {
-            const roleElement = document.getElementById('currentRole');
-            if (roleElement) {
-                roleElement.textContent = roles[currentUserRole]?.name || 'Utilisateur';
-            }
-        }
-
-        function updateMenuPermissions() {
-            const menuItems = document.querySelectorAll('[data-permission]');
-            const userPermissions = roles[currentUserRole]?.permissions || [];
-
-            menuItems.forEach(item => {
-                const requiredPermission = item.getAttribute('data-permission');
-                if (!userPermissions.includes(requiredPermission)) {
-                    item.classList.add('disabled');
-                } else {
-                    item.classList.remove('disabled');
-                }
-            });
-        }
-
-        function hasPermission(permission) {
-            return roles[currentUserRole]?.permissions?.includes(permission) || false;
-        }
-
+        // Sidebar toggle
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
-            const overlay = document.getElementById('sidebarOverlay');
             
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('show');
-                overlay.classList.toggle('show');
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
             } else {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
             }
         }
 
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            
-            sidebar.classList.remove('show');
-            overlay.classList.remove('show');
-        }
-
+        // User menu toggle
         function toggleUserMenu() {
             const userMenu = document.getElementById('userDropdownMenu');
             userMenu.classList.toggle('show');
         }
 
-        // Fermer le menu utilisateur en cliquant ailleurs
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                themeToggle.classList.remove('active');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-theme');
+                themeToggle.classList.add('active');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Profile and settings functions
+        function showProfile() {
+            alert('Fonctionnalité profil à implémenter');
+        }
+
+        function showSettings() {
+            alert('Fonctionnalité paramètres à implémenter');
+        }
+
+        // Initialize theme from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.getElementById('themeToggle').classList.add('active');
+            }
+        });
+
+        // Close user menu when clicking outside
         document.addEventListener('click', function(event) {
             const userProfile = document.querySelector('.user-profile');
             const userMenu = document.getElementById('userDropdownMenu');
@@ -248,54 +252,8 @@
                 userMenu.classList.remove('show');
             }
         });
-
-        function showProfile() {
-            // À implémenter : afficher le profil utilisateur
-            console.log('Afficher le profil');
-            document.getElementById('userDropdownMenu').classList.remove('show');
-        }
-
-        function showSettings() {
-            // À implémenter : afficher les paramètres
-            console.log('Afficher les paramètres');
-            document.getElementById('userDropdownMenu').classList.remove('show');
-        }
-
-        function toggleTheme() {
-            const themeToggle = document.getElementById('themeToggle');
-            const body = document.body;
-            
-            if (themeToggle.classList.contains('active')) {
-                // Désactiver le mode sombre
-                themeToggle.classList.remove('active');
-                body.classList.remove('dark-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
-                // Activer le mode sombre
-                themeToggle.classList.add('active');
-                body.classList.add('dark-theme');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            const themeToggle = document.getElementById('themeToggle');
-            
-            if (savedTheme === 'dark') {
-                themeToggle.classList.add('active');
-                document.body.classList.add('dark-theme');
-            }
-        }
-
-        // Gestion responsive
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                closeSidebar();
-            }
-        });
     </script>
-    
+
     @stack('scripts')
 </body>
 </html>

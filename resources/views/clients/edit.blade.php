@@ -33,6 +33,20 @@
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
+                                <label for="raison_sociale" class="form-label">Raison sociale</label>
+                                <input type="text" 
+                                       class="form-control @error('raison_sociale') is-invalid @enderror" 
+                                       id="raison_sociale" 
+                                       name="raison_sociale" 
+                                       value="{{ old('raison_sociale', $client->raison_sociale) }}">
+                                @error('raison_sociale')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
                                 <label for="adresse" class="form-label">Adresse *</label>
                                 <textarea class="form-control @error('adresse') is-invalid @enderror" 
                                           id="adresse" 

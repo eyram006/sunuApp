@@ -32,6 +32,7 @@ class ClientController extends Controller
     {
         $request->validate([
             'nom_entreprise' => 'required|string|max:255',
+            'raison_sociale' => 'nullable|string|max:255',
             'adresse' => 'required|string',
             'telephone' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email',
@@ -40,6 +41,7 @@ class ClientController extends Controller
         try {
             $client = Client::create([
                 'nom_entreprise' => $request->nom_entreprise,
+                'raison_sociale' => $request->raison_sociale,
                 'adresse' => $request->adresse,
                 'telephone' => $request->telephone,
                 'email' => $request->email,
@@ -81,13 +83,14 @@ class ClientController extends Controller
         
         $request->validate([
             'nom_entreprise' => 'required|string|max:255',
+            'raison_sociale' => 'nullable|string|max:255',
             'adresse' => 'required|string',
             'telephone' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email,' . $id,
         ]);
 
         try {
-            $client->update($request->only(['nom_entreprise', 'adresse', 'telephone', 'email']));
+            $client->update($request->only(['nom_entreprise', 'raison_sociale', 'adresse', 'telephone', 'email']));
             return redirect()->route('clients.index')->with('success', 'Client mis à jour avec succès !');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour du client: ' . $e->getMessage());

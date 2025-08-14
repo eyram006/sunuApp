@@ -47,13 +47,7 @@ class Gestionnaire extends Model
                     ->withTimestamps();
     }
 
-    /**
-     * Relation avec les assurés gérés
-     */
-    public function assures()
-    {
-        return $this->hasMany(Assure::class, 'gestionnaire_id');
-    }
+    // Note: plus de lien direct avec les assurés; les assurés sont rattachés aux entreprises.
 
     /**
      * Relation avec les demandes traitées

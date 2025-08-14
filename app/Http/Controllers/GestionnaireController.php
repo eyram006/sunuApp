@@ -62,6 +62,14 @@ class GestionnaireController extends Controller
     }
 
     /**
+     * Afficher le formulaire d'import (page dédiée)
+     */
+    public function importForm()
+    {
+        return view('gestionnaires.import');
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -109,11 +117,15 @@ class GestionnaireController extends Controller
      */
     public function show(Gestionnaire $gestionnaire)
     {
-        $gestionnaire->load(['user', 'entreprises', 'assures', 'demandes']);
+        $gestionnaire->load(['user', 'entreprises', 'demandes']);
         
         // Statistiques du gestionnaire
+        // Calculer le nombre d'assurés gérés via les entreprises assignées
+        $entrepriseIds = $gestionnaire->entreprises->pluck('id');
+        $assuresCount = \App\Models\Assure::whereIn('client_id', $entrepriseIds)->count();
+
         $stats = [
-            'assures_gere' => $gestionnaire->assures()->count(),
+            'assures_gere' => $assuresCount,
             'demandes_traitees' => $gestionnaire->demandes()->count(),
             'demandes_en_cours' => $gestionnaire->demandes()->where('statut', 'en_attente')->count(),
             'entreprises_gerees' => $gestionnaire->entreprises()->count(),
@@ -143,8 +155,6 @@ class GestionnaireController extends Controller
             'prenoms' => 'required|string|max:255',
             'email' => 'required|email|unique:gestionnaires,email,' . $gestionnaire->id . '|unique:users,email,' . $gestionnaire->user_id,
             'telephone' => 'nullable|string|max:20',
-            'adresse' => 'nullable|string',
-            'date_embauche' => 'required|date',
             'statut' => 'required|in:actif,inactif,suspendu,en_conge',
             'notes' => 'nullable|string',
             'entreprises' => 'array',
@@ -156,8 +166,7 @@ class GestionnaireController extends Controller
         try {
             // Mettre à jour le gestionnaire
             $gestionnaire->update($request->only([
-                'nom', 'prenoms', 'email', 'telephone', 
-                'adresse', 'date_embauche', 'statut', 'notes'
+                'nom', 'prenoms', 'email', 'telephone', 'statut', 'notes'
             ]));
 
             // Mettre à jour l'utilisateur

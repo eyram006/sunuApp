@@ -1,0 +1,43 @@
+/* TEST ULTRA-SIMPLE POUR LES MODALS */
+
+/* Forcer l'interactivité */
+.modal {
+    pointer-events: auto !important;
+}
+
+.modal * {
+    pointer-events: auto !important;
+}
+
+/* S'assurer que le modal est cliquable */
+.modal.show {
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* Forcer le z-index */
+.modal {
+    z-index: 99999 !important;
+}
+
+.modal-backdrop {
+    z-index: 99998 !important;
+}
+
+/* Test : rendre tout visible et cliquable */
+.modal input,
+.modal select,
+.modal textarea,
+.modal button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Debug visuel */
+.modal {
+    border: 5px solid red !important;
+}
+
+.modal * {
+    border: 1px solid blue !important;
+}

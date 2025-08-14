@@ -47,9 +47,15 @@ Route::middleware('auth')->group(function () {
     // Routes pour les gestionnaires (admin seulement)
     Route::middleware('role:admin')->group(function () {
         Route::resource('gestionnaires', GestionnaireController::class);
+        // Statut
         Route::patch('gestionnaires/{gestionnaire}/statut', [GestionnaireController::class, 'updateStatut'])->name('gestionnaires.update-statut');
+        // Pour compatibilité avec le JS existant
+        Route::post('gestionnaires/{gestionnaire}/update-statut', [GestionnaireController::class, 'updateStatut'])->name('gestionnaires.update-statut.post');
+        // Stats / Export
         Route::get('gestionnaires/stats', [GestionnaireController::class, 'getStats'])->name('gestionnaires.stats');
         Route::get('gestionnaires/export', [GestionnaireController::class, 'export'])->name('gestionnaires.export');
+        // Import
+        Route::get('gestionnaires/import', [GestionnaireController::class, 'importForm'])->name('gestionnaires.import.form');
         Route::post('gestionnaires/import', [GestionnaireController::class, 'import'])->name('gestionnaires.import');
         Route::get('gestionnaires/template', [GestionnaireController::class, 'downloadTemplate'])->name('gestionnaires.template');
     });

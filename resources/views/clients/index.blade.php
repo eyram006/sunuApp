@@ -36,6 +36,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Entreprise</th>
+                                    <th>Raison sociale</th>
                                     <th>Email</th>
                                     <th>Téléphone</th>
                                     <th>Statut</th>
@@ -52,6 +53,7 @@
                                             <br>
                                             <small class="text-muted">{{ $client->adresse }}</small>
                                         </td>
+                                        <td>{{ $client->raison_sociale ?? '—' }}</td>
                                         <td>{{ $client->email }}</td>
                                         <td>{{ $client->telephone }}</td>
                                         <td>
